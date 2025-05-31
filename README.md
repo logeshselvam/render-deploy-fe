@@ -129,9 +129,9 @@ yarn lint            # Run ESLint
 
 ---
 
-## 🌍 Deployment (GitHub Pages)
+## 🌍 Deployment (render.com)
 
-Production builds are deployed to GitHub Pages via GitHub Actions.
+Production builds are deployed to Render.
 
 > `vite.config.ts` uses `base: '/'` for correct public paths.
 
