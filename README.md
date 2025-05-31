@@ -45,9 +45,6 @@ This project showcases UI craftsmanship, robust code organization, and progressi
 src/
 ├── assets/             # Static assets like images, logos, icons
 ├── components/         
-│   ├── atoms/          # UI primitives (e.g., Button, Input, Avatar)
-│   ├── molecules/      # Grouped atoms (e.g., SkillPill, FallbackMessage)
-│   └── organisms/      # Complex reusable UI blocks (e.g., ResumeHeader, ErrorBoundary)
 ├── hooks/              # Custom hooks (e.g., useMobileMenu, useThemeToggle)
 ├── layout/             # Application-level layouts (e.g., MainLayout)
 ├── lib/                # Utilities (e.g., cn, helpers)
