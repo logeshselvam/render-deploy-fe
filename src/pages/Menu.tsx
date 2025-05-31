@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/components/ui/use-toast"
+import { MenuChat } from "@/components/ui/chat"
 
 // Backend API Base URL
 const API_BASE_URL = "https://render-deploy-iib7.onrender.com"
@@ -961,6 +962,12 @@ export default function RestaurantMenuManager() {
       </Dialog>
 
       <Toaster />
+      
+      {/* Menu Recommendation Chat */}
+      <MenuChat 
+        menuId={selectedMenuId} 
+        menuName={selectedMenu?.name}
+      />
     </div>
   )
 }
