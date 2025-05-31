@@ -1,70 +1,154 @@
-# Getting Started with Create React App
+# AI - Gamblers — React + TypeScript + Vite
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A fully responsive, developer-focused portfolio built using scalable architecture, atomic design, and best-in-class tooling.  
+This project showcases UI craftsmanship, robust code organization, and progressive enhancement using the modern React ecosystem.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🧠 Highlights
 
-### `npm start`
+- ⚛️ **Built with React 19** and **TypeScript** using **Vite** for lightning-fast dev experience
+- 🌙 **Dark mode** with `themes` and localStorage support
+- 🧱 **Atomic Design System** (Atoms → Molecules → Organisms)
+- 🧪 **Storybook with Chromatic CI** for visual regression testing
+- 💥 **Custom Error Boundary** with animated fallback and GitHub issue linking
+- 🎨 **Framer Motion** for elegant transitions and interactions
+- 💅 **TailwindCSS** for fast, composable styling
+- 🔁 **React Router v6+** with lazy-loaded routes & Suspense fallback
+- ⚙️ Strict ESLint/Prettier rules using Airbnb base and CVA for variant support
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚀 Tech Stack
 
-### `npm test`
+| Tool                  | Purpose                                                          |
+|-----------------------|------------------------------------------------------------------|
+| **React 19**          | UI library for declarative, component-driven interfaces          |
+| **TypeScript**        | Strong typing & IntelliSense                                    |
+| **Vite**              | Fast bundler with HMR                                            |
+| **Tailwind CSS**      | Utility-first styling                                            |
+| **React Router DOM**  | Routing with layout & nested routes                             |
+| **Zod**               | Form validation with TypeScript inference                        |
+| **React Hook Form**   | Lightweight form library with great performance                  |
+| **Framer Motion**     | Animations & transitions                                         |
+| **Lucide-react**      | Icon library for modern interfaces                               |
+| **Storybook**         | UI component explorer with design system docs                    |
+| **Chromatic**         | CI for Storybook, visual testing, and UI snapshots               |
+| **ESLint & Prettier** | Code linting and formatting enforcement                          |
+| **clsx & cva**        | Condition-based styling + variant support                        |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 📁 Folder Structure
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+src/
+├── assets/             # Static assets like images, logos, icons
+├── components/         
+│   ├── atoms/          # UI primitives (e.g., Button, Input, Avatar)
+│   ├── molecules/      # Grouped atoms (e.g., SkillPill, FallbackMessage)
+│   └── organisms/      # Complex reusable UI blocks (e.g., ResumeHeader, ErrorBoundary)
+├── hooks/              # Custom hooks (e.g., useMobileMenu, useThemeToggle)
+├── layout/             # Application-level layouts (e.g., MainLayout)
+├── lib/                # Utilities (e.g., cn, helpers)
+├── pages/              # Route-level views (e.g., Home, Contact, Projects)
+├── router/             # App routing setup using React Router
+├── styles/             # Tailwind global styles, animations
+├── types/              # Shared TypeScript types/interfaces
+├── App.tsx             # Entry point with RouterProvider + Suspense
+└── main.tsx            # Vite bootstrap with theme/provider wrapping
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📘 Component Documentation
 
-### `npm run eject`
+This project includes full Storybook support with Chromatic for:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- 🧩 **Visual regression testing**
+- 🧪 **Autodocs & interaction testing**
+- 🧱 **Atomic design structure**
+- 🧼 **Lint-safe UI development workflow**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Run Storybook:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```bash
+yarn storybook
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Test Snapshots with Chromatic:
 
-## Learn More
+```bash
+yarn chromatic
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 💥 Error Handling
 
-### Code Splitting
+Includes a custom `ErrorBoundary` component that:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Catches client-side rendering errors
+- Shows an animated fallback with options:
+  - 🔁 Reload page
+  - 🏠 Go to homepage
+  - 🐛 Open GitHub issue
 
-### Analyzing the Bundle Size
+✅ Also tested with Storybook via `ErrorThrowingComponent`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## 🔀 Lazy Routing & Suspense
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Dynamic routing is enabled via `React.lazy()` and `Suspense`:
 
-### Advanced Configuration
+```tsx
+const Home = lazy(() => import("../pages/Home"));
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Wrapped in a `LazyWrapper` component that shows a fallback while loading:
 
-### Deployment
+```tsx
+<Suspense fallback={<div className="text-center py-10">Loading...</div>}>
+  <Outlet />
+</Suspense>
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 📦 Scripts
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+yarn dev             # Start dev server (Vite)
+yarn build           # Production build
+yarn preview         # Preview the built site locally
+yarn storybook       # Run Storybook
+yarn chromatic       # Push Storybook to Chromatic
+yarn lint            # Run ESLint
+```
+
+---
+
+## 🌍 Deployment (GitHub Pages)
+
+Production builds are deployed to GitHub Pages via GitHub Actions.
+
+> `vite.config.ts` uses `base: '/'` for correct public paths.
+
+```ts
+export default defineConfig({
+  base: '/',
+  plugins: [...],
+});
+```
+---
+
+## 🧪 Future Plans
+
+- [ ] Vitest + React Testing Library for integration testing
+- [ ] Playwright for E2E tests
+- [ ] 3D experience using Three.js
+- [ ] Internationalization (i18n)
+- [ ] PDF resume export with Puppeteer
+
+---

@@ -1,0 +1,92 @@
+{
+    "welcome": "Welcome to my portfolio",
+    "resumeoverview": "Resume Overview",
+    "language":"language",
+    "header": {
+        "builtwith":"Built with React + Vite",
+        "home": "Home",
+        "projects": "Projects",
+        "contact": "Contact",
+        "toggle_theme": "Toggle {{theme}} mode",
+        "dark_mode": "dark",
+        "light_mode": "light"
+    },
+    "description":"I'm Jonathan Arturo López de la Garza, a passionate creative and results-driven senior software engineer with 8+ years of experience designing and building scalable web and mobile applications using React, Next.js, NestJS, and modern TypeScript stacks. Adept in atomic design, Storybook-driven UIs, and API architecture. Founder of multiple ventures including JG Charcutería and Nos imperii. Passionate about clean code, seamless UX, and pushing the limits of front-end innovation",
+    "download_resume":"Download Resume",
+    "go_home": "Go to Homepage",
+    "projects": {
+        "heading": "Featured Projects",
+        "search_placeholder": "Search project by keyword",
+        "items": [
+            {
+            "title": "Signal Processor UI",
+            "description": "Enterprise-grade signal analysis interface built with React, Tailwind, and Three.js.",
+            "tags": ["React", "Three.js", "Tailwind"]
+            },
+            {
+            "title": "Client Web App",
+            "description": "Custom ordering platform for Jonathan's charcuterie business using Vite + Tailwind.",
+            "tags": ["Vite", "Tailwind", "Storybook"]
+            },
+            {
+            "title": "Rentals Admin Dashboard",
+            "description": "Internal booking and analytics panel for house rentals in Saltillo.",
+            "tags": ["Next.js", "Charts", "Firebase"]
+            }
+        ]
+    },
+    "skills": {
+        "heading": "Skills",
+        "items": [
+            "Frontend",
+            "Redux",
+            "TypeScript",
+            "Tailwind",
+            "Storybook",
+            "NestJS",
+            "Django",
+            ".NET Core"
+        ]
+    },
+    "projects_section": {
+        "heading": "Projects",
+        "items": [
+            {
+                "title": "Build-Runant Raat-prodön",
+                "description": "Minimalist advertisement platform for one-off user friendly websites.",
+                "badges": ["Frontend", "UX"]
+            },
+            {
+                "title": "Rentals Admin Dashboard",
+                "description": "Internal booking and analytics panel for house rentals in Saltillo.",
+                "badges": ["Next.js", "Redux", "Docker", "Firebase"]
+            },
+            {
+                "title": "Component Library",
+                "description": "Atomic-oriented front-end component library initiative with CSS variable-first approach.",
+                "badges": ["React", "Storybook", "Tailwind", "Docker"]
+            }
+        ]
+    },
+    "timeline_heading": "Timeline",
+    "timeline1": {
+      "year": "2020 – Present",
+      "title": "Senior Frontend Developer – ArteDigital",
+      "description": "Developed and deployed 6+ scalable apps with advanced A/B testing, Storybook integration, and atomic design."
+    },
+    "timeline2": {
+      "year": "2018 – 2020",
+      "title": "Full Stack Developer – Hexaware",
+      "description": "Built reusable boilerplates and improved UI/UX across several React and .NET applications."
+    },
+    "timeline3": {
+      "year": "2017 – 2018",
+      "title": "Full Stack Developer – Nos Imperii, Teisense, Calisis",
+      "description": "Created ERP, OEE dashboards, and blockchain apps winning 6+ hackathons for innovation."
+    },
+    "timeline4": {
+      "year": "2015 – 2017",
+      "title": "UTC – Associate Degree in IT Engineering",
+      "description": "Completed technical degree with a focus on full stack development and systems design."
+    }
+}

@@ -1,0 +1,92 @@
+{
+    "welcome": "Bienvenido a mi portafolio",
+    "resumeoverview": "Resumen del curriculum",
+    "language":"Lenguaje",
+    "header": {
+        "builtwith":"Hecho con React + Vite",
+        "home": "Inicio",
+        "projects": "Proyectos",
+        "contact": "Contacto",
+        "toggle_theme": "Cambiar a modo {{theme}}",
+        "dark_mode": "oscuro",
+        "light_mode": "claro"
+    },
+    "description":"Soy Jonathan Arturo López de la Garza, un ingeniero de software senior apasionado, creativo y orientado a resultados, con más de 8 años de experiencia diseñando y construyendo aplicaciones web y móviles escalables utilizando React, Next.js, NestJS y stacks modernos con TypeScript. Experto en atomic design, interfaces impulsadas por Storybook y arquitectura de APIs. Fundador de múltiples emprendimientos, incluidos JG Charcutería y Nos imperii. Apasionado por el clean code, la experiencia de usuario fluida y llevar la innovación del front-end.",
+    "download_resume":"Descargar Currículum",
+    "go_home": "Ir al inicio",
+    "projects": {
+        "heading": "Proyectos destacados",
+        "search_placeholder": "Buscar proyecto por palabra clave",
+        "items": [
+            {
+            "title": "Interfaz de Procesamiento de Señales",
+            "description": "Interfaz de análisis de señales de nivel empresarial construida con React, Tailwind y Three.js.",
+            "tags": ["React", "Three.js", "Tailwind"]
+            },
+            {
+            "title": "Aplicación Web para Clientes",
+            "description": "Plataforma personalizada de pedidos para el negocio de charcutería de Jonathan usando Vite + Tailwind.",
+            "tags": ["Vite", "Tailwind", "Storybook"]
+            },
+            {
+            "title": "Panel de Administración de Rentas",
+            "description": "Panel interno de reservas y análisis para alquileres en Saltillo.",
+            "tags": ["Next.js", "Gráficas", "Firebase"]
+            }
+        ]
+    },
+    "skills": {
+        "heading": "Habilidades",
+        "items": [
+            "Frontend",
+            "Redux",
+            "TypeScript",
+            "Tailwind",
+            "Storybook",
+            "NestJS",
+            "Django",
+            ".NET Core"
+        ]
+    },
+    "projects_section": {
+        "heading": "Proyectos",
+        "items": [
+            {
+                "title": "Build-Runant Raat-prodön",
+                "description": "Plataforma publicitaria minimalista para sitios web amigables de un solo uso.",
+                "badges": ["Frontend", "UX"]
+            },
+            {
+                "title": "Panel de Administración de Rentas",
+                "description": "Panel interno de reservas y análisis para alquileres en Saltillo.",
+                "badges": ["Next.js", "Redux", "Docker", "Firebase"]
+            },
+            {
+                "title": "Biblioteca de Componentes",
+                "description": "Iniciativa de biblioteca de componentes front-end orientada a átomos con enfoque en variables CSS.",
+                "badges": ["React", "Storybook", "Tailwind", "Docker"]
+            }
+        ]
+    },
+    "timeline_heading": "Línea de tiempo",
+    "timeline1": {
+      "year": "2020 – Presente",
+      "title": "Desarrollador Frontend Senior – ArteDigital",
+      "description": "Desarrollé y lancé más de 6 aplicaciones escalables con pruebas A/B, integración de Storybook y diseño atómico."
+    },
+    "timeline2": {
+      "year": "2018 – 2020",
+      "title": "Desarrollador Full Stack – Hexaware",
+      "description": "Construí plantillas reutilizables y mejoré UI/UX en múltiples aplicaciones React y .NET."
+    },
+    "timeline3": {
+      "year": "2017 – 2018",
+      "title": "Desarrollador Full Stack – Nos Imperii, Teisense, Calisis",
+      "description": "Creé ERPs, tableros OEE y aplicaciones blockchain, ganando más de 6 hackatones por innovación."
+    },
+    "timeline4": {
+      "year": "2015 – 2017",
+      "title": "UTC – Técnico en Ingeniería en TI",
+      "description": "Finalicé el grado técnico con enfoque en desarrollo full stack y diseño de sistemas."
+    }
+}
