@@ -20,4 +20,7 @@ export default defineConfig(() => ({
       brotliSize: true,
     })
   ],
+  build: {
+    outDir: 'build', // Change output directory from 'dist' to 'build' for Render
+  },
 }));
