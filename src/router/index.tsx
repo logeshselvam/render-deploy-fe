@@ -5,7 +5,6 @@ import { LazyWrapper } from "../components/LazyWrapper/LazyWrapper";
 import FallbackMessage from "../components/FallBackMessage/FallBackMessage";
 
 // Lazy load the HomePage component
-const HomePage = lazy(() => import("../pages/Home"));
 const MenuPage = lazy(() => import("../pages/Menu"));
 export const router = createBrowserRouter([
   {
@@ -17,8 +16,7 @@ export const router = createBrowserRouter([
         element: <LazyWrapper />,
         errorElement: <FallbackMessage />,
         children: [
-          { index: true, element: <HomePage /> },
-          { path: "menu", element: <MenuPage /> },
+          { index: true, element: <MenuPage /> },
         ],
       },
     ],
