@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Edit, Trash2, GripVertical, Upload, Save, MenuIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,76 +11,137 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/components/ui/use-toast"
 
+// Backend API Base URL
+const API_BASE_URL = "https://render-deploy-iib7.onrender.com"
+
+// Updated interfaces to match backend structure
 interface MenuItem {
-  id: string
+  id?: number
   name: string
   description: string
   price: number
   tags: string[]
   ingredients: string[]
+  imageUrl?: string
+  rating?: number
+  numRatings?: number
+  spiceLevel?: number
+  calories?: number
+  availableTimes: string[]
+  ageGroup: string
 }
 
 interface MenuCategory {
-  id: string
+  id?: number
   name: string
-  items: MenuItem[]
+  position: number
+  items?: MenuItem[]
 }
 
 interface Menu {
-  id: string
+  id?: number
+  restaurantId: number
   name: string
-  categories: MenuCategory[]
+  cuisine: string
+  ageGroup: string
+  imageUrl?: string
+  rating?: number
+  numRatings?: number
+  availableTimes: string[]
+  categories?: MenuCategory[]
+}
+
+// API Functions
+const api = {
+  async fetchMenus(): Promise<Menu[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/menus`)
+      if (!response.ok) throw new Error('Failed to fetch menus')
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching menus:', error)
+      return []
+    }
+  },
+
+  async createMenu(menuData: Omit<Menu, 'id'>): Promise<Menu | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/menus`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(menuData)
+      })
+      if (!response.ok) throw new Error('Failed to create menu')
+      return await response.json()
+    } catch (error) {
+      console.error('Error creating menu:', error)
+      return null
+    }
+  },
+
+  async createCategory(menuId: number, categoryData: Omit<MenuCategory, 'id'>): Promise<MenuCategory | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/menus/${menuId}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(categoryData)
+      })
+      if (!response.ok) throw new Error('Failed to create category')
+      return await response.json()
+    } catch (error) {
+      console.error('Error creating category:', error)
+      return null
+    }
+  },
+
+  async createItem(categoryId: number, itemData: Omit<MenuItem, 'id'>): Promise<MenuItem | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/categories/${categoryId}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(itemData)
+      })
+      if (!response.ok) throw new Error('Failed to create item')
+      return await response.json()
+    } catch (error) {
+      console.error('Error creating item:', error)
+      return null
+    }
+  }
 }
 
 const PREDEFINED_TAGS = [
-  "Vegan",
-  "Vegetarian",
-  "Gluten-Free",
-  "Spicy",
-  "Popular",
-  "New",
-  "Dairy-Free",
-  "Nut-Free",
-  "Keto",
-  "Low-Carb",
-  "Organic",
-  "Seasonal",
+  "gluten-free",
+  "vegetarian", 
+  "vegan",
+  "spicy",
+  "signature",
+  "popular",
+  "new",
+  "dairy-free",
+  "nut-free",
+  "keto",
+  "low-carb",
+  "organic",
+  "seasonal",
 ]
 
-export default function RestaurantMenuManager() {
-  const [menus, setMenus] = useState<Menu[]>([
-    {
-      id: "1",
-      name: "Breakfast Menu",
-      categories: [
-        {
-          id: "1",
-          name: "Appetizers",
-          items: [
-            {
-              id: "1",
-              name: "Avocado Toast",
-              description: "Fresh avocado on sourdough with cherry tomatoes",
-              price: 12.99,
-              tags: ["Vegetarian", "Popular"],
-              ingredients: ["Avocado", "Sourdough bread", "Cherry tomatoes", "Olive oil", "Salt", "Pepper"],
-            },
-          ],
-        },
-      ],
-    },
-  ])
+const AVAILABLE_TIMES = ["breakfast", "lunch", "dinner"]
+const AGE_GROUPS = ["All", "Kids", "Adults", "Senior"]
+const CUISINES = ["American", "Italian", "French", "Chinese", "Japanese", "Mexican", "Indian", "Thai", "Mediterranean", "Other"]
 
-  const [selectedMenuId, setSelectedMenuId] = useState<string>("1")
-  const [newMenuName, setNewMenuName] = useState("")
-  const [newCategoryName, setNewCategoryName] = useState("")
+export default function RestaurantMenuManager() {
+  const [menus, setMenus] = useState<Menu[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedMenuId, setSelectedMenuId] = useState<number | null>(null)
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false)
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
   const [isAddItemOpen, setIsAddItemOpen] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("")
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -88,13 +149,68 @@ export default function RestaurantMenuManager() {
 
   const selectedMenu = menus.find((menu) => menu.id === selectedMenuId)
 
+  // Menu form state
+  const [menuForm, setMenuForm] = useState({
+    name: "",
+    cuisine: "",
+    ageGroup: "All",
+    imageUrl: "",
+    availableTimes: [] as string[],
+    restaurantId: 1 // Default restaurant ID
+  })
+
+  // Category form state
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    position: 1
+  })
+
+  // Item form state
   const [itemForm, setItemForm] = useState({
     name: "",
     description: "",
     price: "",
     tags: [] as string[],
     ingredients: "",
+    imageUrl: "",
+    spiceLevel: 1,
+    calories: "",
+    availableTimes: [] as string[],
+    ageGroup: "All"
   })
+
+  // Load menus on component mount
+  useEffect(() => {
+    loadMenus()
+  }, [])
+
+  const loadMenus = async () => {
+    setLoading(true)
+    const fetchedMenus = await api.fetchMenus()
+    setMenus(fetchedMenus)
+    if (fetchedMenus.length > 0 && !selectedMenuId) {
+      setSelectedMenuId(fetchedMenus[0].id!)
+    }
+    setLoading(false)
+  }
+
+  const resetMenuForm = () => {
+    setMenuForm({
+      name: "",
+      cuisine: "",
+      ageGroup: "All",
+      imageUrl: "",
+      availableTimes: [],
+      restaurantId: 1
+    })
+  }
+
+  const resetCategoryForm = () => {
+    setCategoryForm({
+      name: "",
+      position: 1
+    })
+  }
 
   const resetItemForm = () => {
     setItemForm({
@@ -103,61 +219,117 @@ export default function RestaurantMenuManager() {
       price: "",
       tags: [],
       ingredients: "",
+      imageUrl: "",
+      spiceLevel: 1,
+      calories: "",
+      availableTimes: [],
+      ageGroup: "All"
     })
     setEditingItem(null)
   }
 
-  const addMenu = () => {
-    if (!newMenuName.trim()) return
-
-    const newMenu: Menu = {
-      id: Date.now().toString(),
-      name: newMenuName,
-      categories: [],
+  const addMenu = async () => {
+    if (!menuForm.name.trim() || !menuForm.cuisine) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in menu name and cuisine.",
+        variant: "destructive",
+      })
+      return
     }
 
-    setMenus([...menus, newMenu])
-    setSelectedMenuId(newMenu.id)
-    setNewMenuName("")
-    setIsAddMenuOpen(false)
-
-    toast({
-      title: "Menu created",
-      description: `"${newMenuName}" has been added successfully.`,
-    })
-  }
-
-  const addCategory = () => {
-    if (!newCategoryName.trim() || !selectedMenu) return
-
-    const newCategory: MenuCategory = {
-      id: Date.now().toString(),
-      name: newCategoryName,
-      items: [],
+    const menuData: Omit<Menu, 'id'> = {
+      restaurantId: menuForm.restaurantId,
+      name: menuForm.name,
+      cuisine: menuForm.cuisine,
+      ageGroup: menuForm.ageGroup,
+      imageUrl: menuForm.imageUrl || "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+      availableTimes: menuForm.availableTimes,
+      rating: 0,
+      numRatings: 0
     }
 
-    const updatedMenus = menus.map((menu) =>
-      menu.id === selectedMenuId ? { ...menu, categories: [...menu.categories, newCategory] } : menu,
-    )
+    const newMenu = await api.createMenu(menuData)
+    
+    if (newMenu) {
+      setMenus([...menus, { ...newMenu, categories: [] }])
+      setSelectedMenuId(newMenu.id!)
+      resetMenuForm()
+      setIsAddMenuOpen(false)
 
-    setMenus(updatedMenus)
-    setNewCategoryName("")
-    setIsAddCategoryOpen(false)
-
-    toast({
-      title: "Category added",
-      description: `"${newCategoryName}" has been added to ${selectedMenu.name}.`,
-    })
+      toast({
+        title: "Menu created",
+        description: `"${menuForm.name}" has been added successfully.`,
+      })
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to create menu. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const addOrUpdateItem = () => {
-    if (!itemForm.name.trim() || !itemForm.price || !selectedCategoryId) return
+  const addCategory = async () => {
+    if (!categoryForm.name.trim() || !selectedMenu?.id) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in category name.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const categoryData: Omit<MenuCategory, 'id'> = {
+      name: categoryForm.name,
+      position: categoryForm.position
+    }
+
+    const newCategory = await api.createCategory(selectedMenu.id, categoryData)
+    
+    if (newCategory) {
+      const updatedMenus = menus.map((menu) =>
+        menu.id === selectedMenuId 
+          ? { 
+              ...menu, 
+              categories: [...(menu.categories || []), { ...newCategory, items: [] }] 
+            } 
+          : menu
+      )
+
+      setMenus(updatedMenus)
+      resetCategoryForm()
+      setIsAddCategoryOpen(false)
+
+      toast({
+        title: "Category added",
+        description: `"${categoryForm.name}" has been added to ${selectedMenu.name}.`,
+      })
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to create category. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const addOrUpdateItem = async () => {
+    if (!itemForm.name.trim() || !itemForm.price || selectedCategoryId === null) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in required fields.",
+        variant: "destructive",
+      })
+      return
+    }
 
     const ingredients = itemForm.ingredients
       .split(",")
       .map((ing) => ing.trim())
       .filter((ing) => ing)
     const price = Number.parseFloat(itemForm.price)
+    const calories = itemForm.calories ? Number.parseInt(itemForm.calories) : undefined
 
     if (isNaN(price)) {
       toast({
@@ -168,55 +340,103 @@ export default function RestaurantMenuManager() {
       return
     }
 
-    const newItem: MenuItem = {
-      id: editingItem?.id || Date.now().toString(),
+    const itemData: Omit<MenuItem, 'id'> = {
       name: itemForm.name,
       description: itemForm.description,
       price: price,
       tags: itemForm.tags,
       ingredients: ingredients,
+      imageUrl: itemForm.imageUrl || "https://images.unsplash.com/photo-1519864600265-abb23847ef2c",
+      spiceLevel: itemForm.spiceLevel,
+      calories: calories,
+      availableTimes: itemForm.availableTimes,
+      ageGroup: itemForm.ageGroup,
+      rating: 0,
+      numRatings: 0
     }
 
-    const updatedMenus = menus.map((menu) =>
-      menu.id === selectedMenuId
-        ? {
-            ...menu,
-            categories: menu.categories.map((category) =>
-              category.id === selectedCategoryId
-                ? {
-                    ...category,
-                    items: editingItem
-                      ? category.items.map((item) => (item.id === editingItem.id ? newItem : item))
-                      : [...category.items, newItem],
-                  }
-                : category,
-            ),
-          }
-        : menu,
-    )
+    if (!editingItem) {
+      // Create new item
+      const newItem = await api.createItem(selectedCategoryId, itemData)
+      
+      if (newItem) {
+        const updatedMenus = menus.map((menu) =>
+          menu.id === selectedMenuId
+            ? {
+                ...menu,
+                categories: menu.categories?.map((category) =>
+                  category.id === selectedCategoryId
+                    ? {
+                        ...category,
+                        items: [...(category.items || []), newItem],
+                      }
+                    : category
+                ) || []
+              }
+            : menu
+        )
 
-    setMenus(updatedMenus)
-    resetItemForm()
-    setIsAddItemOpen(false)
+        setMenus(updatedMenus)
+        resetItemForm()
+        setIsAddItemOpen(false)
 
-    toast({
-      title: editingItem ? "Item updated" : "Item added",
-      description: `"${newItem.name}" has been ${editingItem ? "updated" : "added"} successfully.`,
-    })
+        toast({
+          title: "Item added",
+          description: `"${itemForm.name}" has been added successfully.`,
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create item. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } else {
+      // For editing, we'd need PUT endpoints - for now just update locally
+      const updatedMenus = menus.map((menu) =>
+        menu.id === selectedMenuId
+          ? {
+              ...menu,
+              categories: menu.categories?.map((category) =>
+                category.id === selectedCategoryId
+                  ? {
+                      ...category,
+                      items: category.items?.map((item) => 
+                        item.id === editingItem.id 
+                          ? { ...itemData, id: editingItem.id } 
+                          : item
+                      ) || [],
+                    }
+                  : category
+              ) || []
+            }
+          : menu
+      )
+
+      setMenus(updatedMenus)
+      resetItemForm()
+      setIsAddItemOpen(false)
+
+      toast({
+        title: "Item updated",
+        description: `"${itemForm.name}" has been updated successfully.`,
+      })
+    }
   }
 
-  const deleteItem = (categoryId: string, itemId: string) => {
+  const deleteItem = (categoryId: number, itemId: number) => {
+    // For deletion, we'd need DELETE endpoints - for now just update locally
     const updatedMenus = menus.map((menu) =>
       menu.id === selectedMenuId
         ? {
             ...menu,
-            categories: menu.categories.map((category) =>
+            categories: menu.categories?.map((category) =>
               category.id === categoryId
-                ? { ...category, items: category.items.filter((item) => item.id !== itemId) }
-                : category,
-            ),
+                ? { ...category, items: category.items?.filter((item) => item.id !== itemId) || [] }
+                : category
+            ) || []
           }
-        : menu,
+        : menu
     )
 
     setMenus(updatedMenus)
@@ -227,7 +447,7 @@ export default function RestaurantMenuManager() {
     })
   }
 
-  const editItem = (item: MenuItem, categoryId: string) => {
+  const editItem = (item: MenuItem, categoryId: number) => {
     setEditingItem(item)
     setSelectedCategoryId(categoryId)
     setItemForm({
@@ -236,6 +456,11 @@ export default function RestaurantMenuManager() {
       price: item.price.toString(),
       tags: item.tags,
       ingredients: item.ingredients.join(", "),
+      imageUrl: item.imageUrl || "",
+      spiceLevel: item.spiceLevel || 1,
+      calories: item.calories?.toString() || "",
+      availableTimes: item.availableTimes,
+      ageGroup: item.ageGroup
     })
     setIsAddItemOpen(true)
   }
@@ -245,6 +470,24 @@ export default function RestaurantMenuManager() {
       ...prev,
       tags: prev.tags.includes(tag) ? prev.tags.filter((t) => t !== tag) : [...prev.tags, tag],
     }))
+  }
+
+  const toggleAvailableTime = (time: string, formType: 'menu' | 'item') => {
+    if (formType === 'menu') {
+      setMenuForm((prev) => ({
+        ...prev,
+        availableTimes: prev.availableTimes.includes(time) 
+          ? prev.availableTimes.filter((t) => t !== time) 
+          : [...prev.availableTimes, time],
+      }))
+    } else {
+      setItemForm((prev) => ({
+        ...prev,
+        availableTimes: prev.availableTimes.includes(time) 
+          ? prev.availableTimes.filter((t) => t !== time) 
+          : [...prev.availableTimes, time],
+      }))
+    }
   }
 
   const MenuSidebar = () => (
@@ -258,23 +501,78 @@ export default function RestaurantMenuManager() {
               Add Menu
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Menu</DialogTitle>
-              <DialogDescription>Add a new menu to your restaurant (e.g., Breakfast, Lunch, Dinner).</DialogDescription>
+              <DialogDescription>Add a new menu to your restaurant.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="menu-name">Menu Name</Label>
+                <Label htmlFor="menu-name">Menu Name *</Label>
                 <Input
                   id="menu-name"
-                  value={newMenuName}
-                  onChange={(e) => setNewMenuName(e.target.value)}
+                  value={menuForm.name}
+                  onChange={(e) => setMenuForm(prev => ({...prev, name: e.target.value}))}
                   placeholder="e.g., Breakfast Menu"
                 />
               </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="cuisine">Cuisine *</Label>
+                <Select value={menuForm.cuisine} onValueChange={(value) => setMenuForm(prev => ({...prev, cuisine: value}))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select cuisine type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CUISINES.map((cuisine) => (
+                      <SelectItem key={cuisine} value={cuisine}>{cuisine}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="age-group">Age Group</Label>
+                <Select value={menuForm.ageGroup} onValueChange={(value) => setMenuForm(prev => ({...prev, ageGroup: value}))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AGE_GROUPS.map((group) => (
+                      <SelectItem key={group} value={group}>{group}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="menu-image">Image URL</Label>
+                <Input
+                  id="menu-image"
+                  value={menuForm.imageUrl}
+                  onChange={(e) => setMenuForm(prev => ({...prev, imageUrl: e.target.value}))}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Available Times</Label>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_TIMES.map((time) => (
+                    <Badge
+                      key={time}
+                      variant={menuForm.availableTimes.includes(time) ? "default" : "outline"}
+                      className="cursor-pointer capitalize"
+                      onClick={() => toggleAvailableTime(time, 'menu')}
+                    >
+                      {time}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
             <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddMenuOpen(false)}>Cancel</Button>
               <Button onClick={addMenu}>Create Menu</Button>
             </DialogFooter>
           </DialogContent>
@@ -282,18 +580,25 @@ export default function RestaurantMenuManager() {
       </div>
 
       <ScrollArea className="h-[calc(100vh-200px)]">
-        <div className="space-y-2">
-          {menus.map((menu) => (
-            <Button
-              key={menu.id}
-              variant={selectedMenuId === menu.id ? "default" : "ghost"}
-              className="w-full justify-start"
-              onClick={() => setSelectedMenuId(menu.id)}
-            >
-              {menu.name}
-            </Button>
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center text-muted-foreground">Loading menus...</div>
+        ) : (
+          <div className="space-y-2">
+            {menus.map((menu) => (
+              <Button
+                key={menu.id}
+                variant={selectedMenuId === menu.id ? "default" : "ghost"}
+                className="w-full justify-start"
+                onClick={() => setSelectedMenuId(menu.id!)}
+              >
+                <div className="text-left">
+                  <div className="font-medium">{menu.name}</div>
+                  <div className="text-xs text-muted-foreground">{menu.cuisine}</div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        )}
       </ScrollArea>
     </div>
   )
@@ -325,16 +630,18 @@ export default function RestaurantMenuManager() {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h1 className="text-3xl font-bold">{selectedMenu.name}</h1>
-                  <p className="text-muted-foreground mt-1">Manage categories and menu items</p>
+                  <p className="text-muted-foreground mt-1">
+                    {selectedMenu.cuisine} • {selectedMenu.ageGroup} • {selectedMenu.availableTimes.join(", ")}
+                  </p>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline">
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Menu Image
                   </Button>
-                  <Button>
+                  <Button onClick={() => loadMenus()}>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    Refresh
                   </Button>
                 </div>
               </div>
@@ -355,16 +662,27 @@ export default function RestaurantMenuManager() {
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="category-name">Category Name</Label>
+                        <Label htmlFor="category-name">Category Name *</Label>
                         <Input
                           id="category-name"
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          value={categoryForm.name}
+                          onChange={(e) => setCategoryForm(prev => ({...prev, name: e.target.value}))}
                           placeholder="e.g., Appetizers, Mains, Desserts"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="category-position">Position</Label>
+                        <Input
+                          id="category-position"
+                          type="number"
+                          value={categoryForm.position}
+                          onChange={(e) => setCategoryForm(prev => ({...prev, position: parseInt(e.target.value) || 1}))}
+                          min="1"
                         />
                       </div>
                     </div>
                     <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddCategoryOpen(false)}>Cancel</Button>
                       <Button onClick={addCategory}>Add Category</Button>
                     </DialogFooter>
                   </DialogContent>
@@ -372,7 +690,7 @@ export default function RestaurantMenuManager() {
               </div>
 
               <div className="space-y-8">
-                {selectedMenu.categories.map((category) => (
+                {selectedMenu.categories?.map((category) => (
                   <Card key={category.id}>
                     <CardHeader>
                       <div className="flex items-center justify-between">
@@ -382,12 +700,12 @@ export default function RestaurantMenuManager() {
                             {category.name}
                           </CardTitle>
                           <CardDescription>
-                            {category.items.length} item{category.items.length !== 1 ? "s" : ""}
+                            {category.items?.length || 0} item{(category.items?.length || 0) !== 1 ? "s" : ""} • Position {category.position}
                           </CardDescription>
                         </div>
                         <Button
                           onClick={() => {
-                            setSelectedCategoryId(category.id)
+                            setSelectedCategoryId(category.id!)
                             resetItemForm()
                             setIsAddItemOpen(true)
                           }}
@@ -398,7 +716,7 @@ export default function RestaurantMenuManager() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      {category.items.length === 0 ? (
+                      {!category.items?.length ? (
                         <div className="text-center py-8 text-muted-foreground">
                           No items in this category yet. Add your first item!
                         </div>
@@ -422,20 +740,31 @@ export default function RestaurantMenuManager() {
                                         ))}
                                       </div>
                                     </div>
-                                    {item.ingredients.length > 0 && (
-                                      <p className="text-xs text-muted-foreground mt-2">
-                                        <span className="font-medium">Ingredients:</span> {item.ingredients.join(", ")}
+                                    <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                                      {item.ingredients.length > 0 && (
+                                        <p>
+                                          <span className="font-medium">Ingredients:</span> {item.ingredients.join(", ")}
+                                        </p>
+                                      )}
+                                      <p>
+                                        <span className="font-medium">Available:</span> {item.availableTimes.join(", ")} • {item.ageGroup}
                                       </p>
-                                    )}
+                                      {item.calories && (
+                                        <p>
+                                          <span className="font-medium">Calories:</span> {item.calories} • 
+                                          <span className="font-medium"> Spice Level:</span> {item.spiceLevel}/5
+                                        </p>
+                                      )}
+                                    </div>
                                   </div>
                                   <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => editItem(item, category.id)}>
+                                    <Button variant="outline" size="sm" onClick={() => editItem(item, category.id!)}>
                                       <Edit className="h-4 w-4" />
                                     </Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => deleteItem(category.id, item.id)}
+                                      onClick={() => deleteItem(category.id!, item.id!)}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -451,7 +780,7 @@ export default function RestaurantMenuManager() {
                 ))}
               </div>
 
-              {selectedMenu.categories.length === 0 && (
+              {!selectedMenu.categories?.length && (
                 <Card>
                   <CardContent className="text-center py-12">
                     <h3 className="text-lg font-medium mb-2">No categories yet</h3>
@@ -469,7 +798,9 @@ export default function RestaurantMenuManager() {
           ) : (
             <div className="text-center py-12">
               <h2 className="text-xl font-medium mb-2">No menu selected</h2>
-              <p className="text-muted-foreground">Select a menu from the sidebar to get started.</p>
+              <p className="text-muted-foreground">
+                {loading ? "Loading menus..." : "Select a menu from the sidebar to get started."}
+              </p>
             </div>
           )}
         </div>
@@ -483,7 +814,7 @@ export default function RestaurantMenuManager() {
           if (!open) resetItemForm()
         }}
       >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingItem ? "Edit Item" : "Add New Item"}</DialogTitle>
             <DialogDescription>
@@ -491,14 +822,28 @@ export default function RestaurantMenuManager() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="item-name">Item Name *</Label>
-              <Input
-                id="item-name"
-                value={itemForm.name}
-                onChange={(e) => setItemForm((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="e.g., Grilled Salmon"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="item-name">Item Name *</Label>
+                <Input
+                  id="item-name"
+                  value={itemForm.name}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Grilled Salmon"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="item-price">Price *</Label>
+                <Input
+                  id="item-price"
+                  type="number"
+                  step="0.01"
+                  value={itemForm.price}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, price: e.target.value }))}
+                  placeholder="0.00"
+                />
+              </div>
             </div>
 
             <div className="grid gap-2">
@@ -512,16 +857,55 @@ export default function RestaurantMenuManager() {
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="item-price">Price *</Label>
-              <Input
-                id="item-price"
-                type="number"
-                step="0.01"
-                value={itemForm.price}
-                onChange={(e) => setItemForm((prev) => ({ ...prev, price: e.target.value }))}
-                placeholder="0.00"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="item-image">Image URL</Label>
+                <Input
+                  id="item-image"
+                  value={itemForm.imageUrl}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, imageUrl: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="item-calories">Calories</Label>
+                <Input
+                  id="item-calories"
+                  type="number"
+                  value={itemForm.calories}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, calories: e.target.value }))}
+                  placeholder="e.g., 450"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="spice-level">Spice Level (1-5)</Label>
+                <Input
+                  id="spice-level"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={itemForm.spiceLevel}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, spiceLevel: parseInt(e.target.value) || 1 }))}
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="item-age-group">Age Group</Label>
+                <Select value={itemForm.ageGroup} onValueChange={(value) => setItemForm(prev => ({...prev, ageGroup: value}))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AGE_GROUPS.map((group) => (
+                      <SelectItem key={group} value={group}>{group}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="grid gap-2">
@@ -535,6 +919,22 @@ export default function RestaurantMenuManager() {
                     onClick={() => toggleTag(tag)}
                   >
                     {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Available Times</Label>
+              <div className="flex flex-wrap gap-2">
+                {AVAILABLE_TIMES.map((time) => (
+                  <Badge
+                    key={time}
+                    variant={itemForm.availableTimes.includes(time) ? "default" : "outline"}
+                    className="cursor-pointer capitalize"
+                    onClick={() => toggleAvailableTime(time, 'item')}
+                  >
+                    {time}
                   </Badge>
                 ))}
               </div>
