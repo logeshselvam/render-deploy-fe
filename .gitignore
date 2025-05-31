@@ -13,6 +13,7 @@ dist
 dist-ssr
 /build
 build
+bundle-stats.html
 *.local
 
 # Editor directories and files
